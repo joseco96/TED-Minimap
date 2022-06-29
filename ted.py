@@ -903,16 +903,17 @@ class configuration:
               'total_triage_green':20,
               'total_triage_red':20,
               'total_triage_yellow':20,
-              'max_tiles':100,
-              'max_victims':2,
-              'green_pos' : set(),
+              'max_tiles':100, #Max tiles that can be covered in 10s
+              'max_victims':2, #victims saved per 10s asssuming every victim is saved during the trial
+              'green_pos' : set(), #position (x,y) of victims
               'yellow_pos' : set(),
               'red_pos' : set(),
               'rubble_pos' : set(),
               'doors_pos':set(),
-              'skill_s_threshold':5,
-              'door_effort':1,
-              'green-_effort':10,
+              'skill_s_threshold':5, #Threshold time to reset edge cases e.g. player starts saving victim but does complete the triage
+              'door_effort':1, #number of keystrokes to open door
+              'rubble_effort':5, # number of keystrokes to destroy rubble
+              'green_effort':10,
               'yellow_effort':20,
               'red_effort':20,
               'movement_duration':0.2,
