@@ -189,7 +189,7 @@ def process_event(data,player,config):
         return
     remove_tile(data,player_data,'door_pos')
     player_data['effort']+=config.extra_info['door_effort']
-    player_data['dig_rubble_duration_s']+=0.2
+    player_data['dig_rubble_duration_s']+=onfig.extra_info['door_effort']
 
   elif data['event'] == 'rubble' :
     if (elapsed_s-player_data['skill_end'])<1:
