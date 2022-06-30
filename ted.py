@@ -433,7 +433,7 @@ def publish_ac_result(data, config):
     #plot_coverage(config)
 
     #config.logger.info(f' - data = {msg_data}')
-    print(msg_data)
+    #print(msg_data)
     
 
 def prepare_ac_msg_data(data, config):
@@ -582,8 +582,8 @@ def compute_skills(data,msg_data, config):
             flag_rubble=1
 
 
-        indv_msg['effort']=player_data['effort']
-        msg_data['effort']+=player_data['effort']
+        indv_msg['effort']=player_data['effort']/config.extra_info['max_tiles']
+        msg_data['effort']+=indv_msg['effort']
 
         record_skill_duration(data,'dig_rubble',player_data)
         record_skill_duration(data,'triage_green',player_data)
@@ -642,6 +642,8 @@ def compute_skills(data,msg_data, config):
             indv_msg['skill_s']=player_data['dig_rubble_duration_s']
             indv_msg['skill_s']=indv_msg['skill_s']/(player_data['triage_green_duration_s']+player_data['move_duration_s']+indv_msg['skill_s']+0.0001)
         
+        if indv_msg['skill_s']>1:
+            ds=2
         msg_data['skill']+=indv_msg['skill_s']
 
 
@@ -651,7 +653,6 @@ def compute_skills(data,msg_data, config):
 
         msg_data['process_workload_burnt']+=indv_msg['workload']
 
-        indv_msg['skill_s']=player_data['triage_green_duration_s']+player_data['dig_rubble_duration_s']+player_data['speedup_duration_s']
 
 
 
@@ -718,7 +719,7 @@ def compute_process_values(msg_data, config):
     msg_data['process_skill_use_s'] = msg_data['skill']/num_players
     config.state['skill_uses'].append(msg_data['skill']/num_players)
 
-    msg_data['process_effort_s'] =  msg_data['effort']/(num_players*config.extra_info['max_tiles'])
+    msg_data['process_effort_s'] =  msg_data['effort']/num_players
     config.state['efforts'].append(msg_data['process_effort_s'])
 
 
