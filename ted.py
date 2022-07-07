@@ -8,11 +8,13 @@ Original file is located at
 """
 
 # Commented out IPython magic to ensure Python compatibility.
+from operator import index
 import sys
 import json
 import math
 import os
 import ast
+from tokenize import group
 from cffi import VerificationMissing
 
 import matplotlib.pyplot as plt
@@ -189,7 +191,7 @@ def process_event(data,player,config):
         return
     remove_tile(data,player_data,'door_pos')
     player_data['effort']+=config.extra_info['door_effort']
-    player_data['dig_rubble_duration_s']+=onfig.extra_info['door_effort']
+    player_data['dig_rubble_duration_s']+=config.extra_info['door_effort']
 
   elif data['event'] == 'rubble' :
     if (elapsed_s-player_data['skill_end'])<1:
@@ -724,6 +726,7 @@ def compute_process_values(msg_data, config):
 
 
 
+    msg_data['process_workload_burnt'] =  msg_data['process_workload_burnt']/num_players
 
     config.state['workloads'].append(msg_data['process_workload_burnt'])
 
@@ -949,21 +952,28 @@ for name in os.listdir(directory):
     df = pd.DataFrame.from_records(config.state['msg_data'])
     df_check.to_csv('check/'+name+'.csv', index=False)
 
+    indx_e = name.find('epi')
+    group = name[11:indx_e-1]
 
-    curr_path= 'output/'+name[:-5]
-    try:
+    curr_path='output/'+group
+
+    if not os.path.exists(curr_path):
         os.mkdir(curr_path)
-    except:
-        pass
-    msg_filename = 'output/'+name[:-5]+'_global.csv'
+
+    msg_filename = curr_path+'/'+name[-6]+'_'+'global.csv'
     df_ted=df[['process_effort_s','process_workload_burnt','process_skill_use_s','elapsed_s','triage_count_red','triage_count_yellow','triage_count_green']]
     df_ted.to_csv(msg_filename, index=False)
+
+    curr_path+='/'+name[-6]
+    if not os.path.exists(curr_path):
+        os.mkdir(curr_path)
+
 
 
 
     for player in config.state['players']:
         df = pd.DataFrame.from_records(config.state['players'][player]['msg'])
-        filename = curr_path+'/'+config.state['players'][player]['cur_role'][0:3]+player+'_'+'.csv'
+        filename = curr_path+'/'+config.state['players'][player]['cur_role'][0:3]+'_'+player+'.csv'
         df.to_csv(filename,index=False)
 
 
