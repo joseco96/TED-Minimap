@@ -230,8 +230,8 @@ def process_event(data,player,config):
         return
     if (elapsed_s-player_data['skill_end'])<1:
         return
-    #if not check_tiles(data,player_data,'rubble_pos') :
-    #    return
+    if not check_tiles(data,player_data,'rubble_pos') :
+        return
     record_skill_start(data, "dig_rubble", player_data)
 
   elif data['event'] == 'green' :
