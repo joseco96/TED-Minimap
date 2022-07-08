@@ -230,8 +230,8 @@ def process_event(data,player,config):
         return
     if (elapsed_s-player_data['skill_end'])<1:
         return
-    if not check_tiles(data,player_data,'rubble_pos') :
-        return
+    #if not check_tiles(data,player_data,'rubble_pos') :
+    #    return
     record_skill_start(data, "dig_rubble", player_data)
 
   elif data['event'] == 'green' :
@@ -638,15 +638,13 @@ def compute_skills(data,msg_data, config):
         indv_msg['exploration'] = player_data['explore_success_count']
 
         if player_data['cur_role']=='medic':
-            indv_msg['skill_s']=player_data['triage_yellow_duration_s']+player_data['triage_red_duration_s']
-            indv_msg['skill_s']=indv_msg['skill_s']/(player_data['triage_green_duration_s']+player_data['move_duration_s']+indv_msg['skill_s']+0.00001)
+            indv_msg['skill']=player_data['triage_yellow_duration_s']+player_data['triage_red_duration_s']
+            indv_msg['skill']=indv_msg['skill']/(player_data['triage_green_duration_s']+player_data['move_duration_s']+indv_msg['skill']+0.00001)
         else:
-            indv_msg['skill_s']=player_data['dig_rubble_duration_s']
-            indv_msg['skill_s']=indv_msg['skill_s']/(player_data['triage_green_duration_s']+player_data['move_duration_s']+indv_msg['skill_s']+0.0001)
-        
-        if indv_msg['skill_s']>1:
-            ds=2
-        msg_data['skill']+=indv_msg['skill_s']
+            indv_msg['skill']=player_data['dig_rubble_duration_s']
+            indv_msg['skill']=indv_msg['skill']/(player_data['triage_green_duration_s']+player_data['move_duration_s']+indv_msg['skill']+0.0001)
+
+        msg_data['skill']+=indv_msg['skill']
 
 
         indv_msg['workload']=((player_data['triage_green_success_count']+\
