@@ -129,8 +129,8 @@ def check_tiles(data,player_data,type):
 
     for i in adj_tiles:
 
-        
         if (x+i[0],y+i[1]) in config.extra_info[type]:
+
             if type == 'red_pos' and not check_red_position((x+i[0],y+i[1]), player_data['id']):
                 return False
 
@@ -913,7 +913,7 @@ class configuration:
               'yellow_pos' : set(),
               'red_pos' : set(),
               'rubble_pos' : set(),
-              'doors_pos':set(),
+              'door_pos':set(),
               'skill_s_threshold':5, #Threshold time to reset edge cases e.g. player starts saving victim but does complete the triage
               'door_effort':1, #number of keystrokes to open door
               'rubble_effort':5, # number of keystrokes to destroy rubble
