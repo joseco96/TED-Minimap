@@ -539,9 +539,9 @@ def compute_skills(data,msg_data, config):
     elapsed_s = msg_data['elapsed_s']
 
     # Initialize the values to 0, we will add to them below.
-    msg_data['effort'] = 0
+    msg_data['Effort'] = 0
     msg_data['move'] = 0
-    msg_data['skill'] = 0
+    msg_data['Skill'] = 0
 
     msg_data['action_green_triage_s'] = 0
     msg_data['action_yellow_triage_s'] = 0
@@ -552,7 +552,7 @@ def compute_skills(data,msg_data, config):
     msg_data['triage_count_yellow']=0
     msg_data['triage_count_red']=0
 
-    msg_data['process_workload_burnt'] = 0
+    msg_data['Workload'] = 0
     msg_data['action_speedup_s'] = 0
 
     # Update skill-related values.
@@ -584,8 +584,8 @@ def compute_skills(data,msg_data, config):
             flag_rubble=1
 
 
-        indv_msg['effort']=player_data['effort']/config.extra_info['max_tiles']
-        msg_data['effort']+=indv_msg['effort']
+        indv_msg['Effort']=player_data['effort']/config.extra_info['max_tiles']
+        msg_data['Effort']+=indv_msg['Effort']
 
         record_skill_duration(data,'dig_rubble',player_data)
         record_skill_duration(data,'triage_green',player_data)
@@ -638,20 +638,20 @@ def compute_skills(data,msg_data, config):
         indv_msg['exploration'] = player_data['explore_success_count']
 
         if player_data['cur_role']=='medic':
-            indv_msg['skill']=player_data['triage_yellow_duration_s']+player_data['triage_red_duration_s']
-            indv_msg['skill']=indv_msg['skill']/(player_data['triage_green_duration_s']+player_data['move_duration_s']+indv_msg['skill']+0.00001)
+            indv_msg['Skill']=player_data['triage_yellow_duration_s']+player_data['triage_red_duration_s']
+            indv_msg['Skill']=indv_msg['Skill']/(player_data['triage_green_duration_s']+player_data['move_duration_s']+indv_msg['Skill']+0.00001)
         else:
-            indv_msg['skill']=player_data['dig_rubble_duration_s']
-            indv_msg['skill']=indv_msg['skill']/(player_data['triage_green_duration_s']+player_data['move_duration_s']+indv_msg['skill']+0.0001)
+            indv_msg['Skill']=player_data['dig_rubble_duration_s']
+            indv_msg['Skill']=indv_msg['Skill']/(player_data['triage_green_duration_s']+player_data['move_duration_s']+indv_msg['Skill']+0.0001)
 
-        msg_data['skill']+=indv_msg['skill']
+        msg_data['Skill']+=indv_msg['Skill']
 
 
-        indv_msg['workload']=((player_data['triage_green_success_count']+\
+        indv_msg['Workload']=((player_data['triage_green_success_count']+\
         player_data['triage_red_success_count']+player_data['triage_yellow_success_count'])/config.extra_info['max_victims']+\
              player_data['explore_success_count']/config.extra_info['max_tiles'])*0.5
 
-        msg_data['process_workload_burnt']+=indv_msg['workload']
+        msg_data['Workload']+=indv_msg['Workload']
 
 
 
@@ -716,17 +716,17 @@ def compute_process_values(msg_data, config):
     config.state['players_deltas'].append(players_delta_s)
 
     
-    msg_data['process_skill_use_s'] = msg_data['skill']/num_players
-    config.state['skill_uses'].append(msg_data['skill']/num_players)
+    msg_data['Skill'] = msg_data['Skill']/num_players
+    config.state['skill_uses'].append(msg_data['Skill']/num_players)
 
-    msg_data['process_effort_s'] =  msg_data['effort']/num_players
-    config.state['efforts'].append(msg_data['process_effort_s'])
+    msg_data['Effort'] =  msg_data['Effort']/num_players
+    config.state['efforts'].append(msg_data['Effort'])
 
 
 
-    msg_data['process_workload_burnt'] =  msg_data['process_workload_burnt']/num_players
+    msg_data['Workload'] =  msg_data['Workload']/num_players
 
-    config.state['workloads'].append(msg_data['process_workload_burnt'])
+    config.state['workloads'].append(msg_data['Workload'])
 
 
 
@@ -959,7 +959,7 @@ for name in os.listdir(directory):
         os.mkdir(curr_path)
 
     msg_filename = curr_path+'/'+name[-6]+'_'+'global.csv'
-    df_ted=df[['process_effort_s','process_workload_burnt','process_skill_use_s','elapsed_s','triage_count_red','triage_count_yellow','triage_count_green']]
+    df_ted=df[['Effort','Workload','Skill','elapsed_s','triage_count_red','triage_count_yellow','triage_count_green']]
     df_ted.to_csv(msg_filename, index=False)
 
     curr_path+='/'+name[-6]
