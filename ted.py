@@ -111,6 +111,9 @@ def mission_stop( config):
     df.to_csv(msg_filename, index=False)
 
 def check_red_position(red,player_id):
+    """
+    Checks if theres is another player next to the red victim
+    """
     adj_tiles = [(-1,0),(1,0),(0,1),(0,-1)]
     red_pos=set()
     for i in adj_tiles:
@@ -121,6 +124,9 @@ def check_red_position(red,player_id):
             return True
     return False 
 def check_tiles(data,player_data,type):
+    """
+    Checks if there is a victim, rubble or dooor in an adjacent tile
+    """
     x=data['x']
     y=data['y']
 
@@ -143,6 +149,9 @@ def check_tiles(data,player_data,type):
     return False
 
 def remove_tile(data,player_data,type):
+    """
+    Removes victims/door/rubble when triage is completed
+    """
     x=data['x']
     y=data['y']
 
@@ -155,6 +164,10 @@ def remove_tile(data,player_data,type):
             return
 
 def check_duration(player_data,data):
+    """
+    Checks if skill has been going on for too long and if so it assumes it was a mistake a stops it. 
+    E.g. Player starts triaging but leaves without finsihing
+    """
     skills= ['dig_rubble','triage_green','triage_red','triage_yellow']
     for skill in skills:
 
@@ -168,33 +181,33 @@ def check_duration(player_data,data):
     return
 
 def process_event(data,player,config):
+  """
+  Handles all messages from server
+  """
 
   player_data = ensure_player_data(player, config)
   player_data['curr_timestamp']=data['timestamp']
+
 
   player_data['event']=data['event']
   player_data['cur_role']=data['role']
 
   elapsed_s = data['timestamp']
 
-
-  if elapsed_s>=1655837538.16063 and player_data['id']=='A5P12YJP805RG':
-      sfa=2
-  check_duration(player_data,data)
+  check_duration(player_data,data) #Checks duration of current skill, resets skill variables if greater than threshold
 
 
   if data['event'] == 'door' :
-    #door is just one second of skill (currently same skill as removing rubble)
-    #record_skill_duration(data,'dig_rubble',player_data)
+    #door is 0.2s of skill (currently same skill as removing rubble)
     player_data['skill_end'] = elapsed_s
-    if not check_tiles(data,player_data,'door_pos'):
+    if not check_tiles(data,player_data,'door_pos'): #Checks if there is a door in an adjacent tile
         return
-    remove_tile(data,player_data,'door_pos')
-    player_data['effort']+=config.extra_info['door_effort']
+    remove_tile(data,player_data,'door_pos')#Removes corresponding door
+    player_data['effort']+=config.extra_info['door_effort'] #Increases effort and engineer skill
     player_data['dig_rubble_duration_s']+=config.extra_info['door_effort']
 
   elif data['event'] == 'rubble' :
-    if (elapsed_s-player_data['skill_end'])<1:
+    if (elapsed_s-player_data['skill_end'])<1:#Checks if more than one second passed from previous skill
         return
     record_skill_duration(data,'dig_rubble',player_data)
     remove_tile(data,player_data,'rubble_pos')
@@ -388,7 +401,11 @@ def update_player_movement(data, player_data, _config):
          data['y'] != player_data['last_y']):
         record_skill_duration(data, 'explore', player_data)
 
+
+
+
     # Compute the movement distance and speed.
+    dt=0
     move_speed = None
     if player_data['last_x'] is not None:
         dx = abs(data['x'] - player_data['last_x'])
@@ -404,6 +421,20 @@ def update_player_movement(data, player_data, _config):
         if player_data['speedup_start_time']:
             player_data['effort']+=move_dist
         player_data['move_duration_s']+=move_dist*config.extra_info['movement_duration']
+
+    # Calculate time next red victim
+    x=data['x']
+    y=data['y']
+
+    adj_tiles = [(1,0),(-1,0),(0,-1),(0,1)]
+
+
+    for i in adj_tiles:
+        if (x+i[0],y+i[1]) in config.extra_info['red_pos']:
+            player_data['inaction_red_duration_s']+=dt
+            break
+
+
 
     # Update the position values for next step.
     player_data['last_x'] = data['x']
@@ -535,6 +566,7 @@ def compute_skills(data,msg_data, config):
     global check_dict
     """
     Computes the skill action/inaction values and adds them to the msg_data.
+    msg_data is the team level message/file, indv_msg the player level file
     """
     elapsed_s = msg_data['elapsed_s']
 
@@ -556,16 +588,15 @@ def compute_skills(data,msg_data, config):
     msg_data['action_speedup_s'] = 0
 
     # Update skill-related values.
-    ############ Need to reset start time to this timestamp
 
     for player_data in config.state['players'].values():
         indv_msg = {}
+
+        #Flags used when players are performing a skill when the metrisc are reported
         flag = 0
         flag_triage_green = 0
         flag_triage_red = 0
         flag_triage_yellow = 0
-
-
         flag_rubble = 0
 
         if player_data['speedup_start_time']:
@@ -592,7 +623,7 @@ def compute_skills(data,msg_data, config):
         record_skill_duration(data,'triage_red',player_data)
         record_skill_duration(data,'triage_yellow',player_data)
 
-
+        #Record start if player was performing skill
         record_skill_duration(data,'speedup',player_data)
         if flag == 1:
             record_skill_start(data,'speedup',player_data)
@@ -640,16 +671,18 @@ def compute_skills(data,msg_data, config):
         if player_data['cur_role']=='medic':
             indv_msg['Skill']=player_data['triage_yellow_duration_s']+player_data['triage_red_duration_s']
             indv_msg['Skill']=indv_msg['Skill']/(player_data['triage_green_duration_s']+player_data['move_duration_s']+indv_msg['Skill']+0.00001)
+            indv_msg['Workload']=(player_data['triage_red_success_count']+player_data['triage_yellow_success_count'])/config.extra_info['max_victims']
         else:
             indv_msg['Skill']=player_data['dig_rubble_duration_s']
             indv_msg['Skill']=indv_msg['Skill']/(player_data['triage_green_duration_s']+player_data['move_duration_s']+indv_msg['Skill']+0.0001)
+            indv_msg['Workload']= (player_data['dig_rubble_duration_s']+player_data['inaction_red_duration_s'])/10
 
         msg_data['Skill']+=indv_msg['Skill']
 
 
-        indv_msg['Workload']=((player_data['triage_green_success_count']+\
-        player_data['triage_red_success_count']+player_data['triage_yellow_success_count'])/config.extra_info['max_victims']+\
-             player_data['explore_success_count']/config.extra_info['max_tiles'])*0.5
+        indv_msg['Workload']+= player_data['explore_success_count']/config.extra_info['max_tiles']
+        indv_msg['Workload']*=0.5
+        print(player_data['inaction_red_duration_s'])
 
         msg_data['Workload']+=indv_msg['Workload']
 
@@ -679,7 +712,7 @@ def compute_skills(data,msg_data, config):
 
     # Reset bookkeeping.
     reset_player_field('effort', config)
-    for skill in ('triage', 'speedup','dig_rubble', 'move_victim', 'explore','triage_red' ,'triage_yellow', 'triage_green','move' ):
+    for skill in ('triage', 'speedup','dig_rubble', 'move_victim', 'explore','triage_red' ,'triage_yellow', 'triage_green','move','inaction_red' ):
         reset_player_field(f'{skill}_duration_s', config)
         reset_player_field(f'{skill}_success_count', config)
 
@@ -833,6 +866,9 @@ def ensure_player_data(player, config):
             'explore_start_time': None,
             'explore_duration_s': 0,
             'explore_success_count': 0,
+
+            # Time next to red victim 
+            'inaction_red_duration_s':0,
 
 
             #Time moving
